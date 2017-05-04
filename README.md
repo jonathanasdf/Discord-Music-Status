@@ -22,6 +22,6 @@ $if(%artist%,%artist% - ,$if(%album%,%album% - ))
 
 ###### Finding Login Token
 1. While on the Discord Desktop app press `ctrl + shift + i`
-2. Switch to `console` tab
-3. type `localStorage.token` and press enter
+2. Switch to `Application` tab
+3. Look at token key in Local Storage 
 4. Copy the token inside the quotation marks
