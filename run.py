@@ -1,7 +1,13 @@
+#!/usr/local/bin/python3
 import discord
 from discord.ext import commands
 import asyncio
 import configparser
+from functools import partial
+import logging
+logging.basicConfig(level=logging.INFO)
+print = partial(print, flush=True)
+
 
 config = configparser.ConfigParser()
 config.read("config.ini")
@@ -40,19 +46,37 @@ async def on_ready():
     print(bot.user.name)
     print(bot.user.id)
     print("---------------------------")
-    song = pull_song()
-    savesong = song
-    await bot.change_presence(afk=True, status=discord.Status.idle, game=discord.Game(name=song))
-    print("Now playing: {}".format(song.encode("ascii", "ignore").decode()))
+    savesong = "_____________"
     while True:
         song = pull_song()
+        song = song[:song.rfind('[')-1]
         if savesong != song:
-            await bot.change_presence(afk=True, status=discord.Status.idle, game=discord.Game(name=song))
             savesong = song
-            print("Now playing: {}".format(song.encode("ascii", "ignore").decode()))
-        await asyncio.sleep(5)
+            if song.strip() == '':
+                await bot.change_presence(game=discord.Game())
+                print("Stopped playing music.")
+            else:
+                await bot.change_presence(game=discord.Game(name=song))
+                print("Listening to: {}".format(song))
+        await asyncio.sleep(1)
+
+@bot.event
+async def on_message(message):
+    if message.content == "!np":
+        song = pull_song()
+        if song.strip() == '':
+            await bot.send_message(message.channel, "```css\nNot listening to anything!```")
+        else:
+            await bot.send_message(message.channel, "```css\nListening to: {}```".format(song))
+            yt_message = await bot.send_message(message.channel, "~yt {}".format(song))
+            await bot.delete_message(yt_message)
+    await bot.process_commands(message)
 
 def pull_song():
+    # $if(%ispaused%,,
+    # $if(%artist%,%artist% - ,$if(%album%,%album% - ))
+    # %title%
+    # )
     file = open(snip, encoding="utf8")
     song = file.read()
     return song
